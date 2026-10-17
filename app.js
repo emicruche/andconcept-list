@@ -174,8 +174,11 @@ function renderOwnerList(payload, listId) {
   let html = `<a class="back-link" href="#/">‹ Mes listes</a>` + headerHtml(esc(list.name));
 
   html += `<div class="card">
-    <h2>${esc(list.name)}</h2>
-    <div class="share-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h2 style="margin:0">${esc(list.name)}</h2>
+      <button class="btn btn-danger" id="delete-list-btn" style="padding:8px 12px;font-size:13px">🗑️ Supprimer la liste</button>
+    </div>
+    <div class="share-section" style="margin-top:12px">
       <strong style="font-size:14px;color:var(--violet-dark)">🔗 Partager avec vos proches</strong>
       <p class="hint" style="margin:6px 0 0">Vos proches verront la liste, filtreront par budget et réserveront en secret.</p>
       <div class="share-link-box">
@@ -215,6 +218,15 @@ function renderOwnerList(payload, listId) {
     history.replaceState(null, '', `#/e/${encodeToken(list)}|${listId}`);
   };
   const refresh = () => { persist(); renderOwnerList(list, listId); };
+
+  document.getElementById('delete-list-btn').onclick = () => {
+    if (!confirm('Supprimer cette liste et toutes ses idées ?')) return;
+    const lists = loadLists();
+    delete lists[listId];
+    saveLists(lists);
+    location.hash = '#/';
+    toast('Liste supprimée');
+  };
 
   document.getElementById('add-gift-btn').onclick = () => renderEditForm(item => {
     list.items.push(item); refresh(); toast('Idée ajoutée 🎉');
@@ -260,7 +272,10 @@ async function renderServerList(list, adminToken) {
     headerHtml(esc(list.name) + ' · ☁');
 
   html += `<div class="card">
-    <h2>${esc(list.name)}</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h2 style="margin:0">${esc(list.name)}</h2>
+      <button class="btn btn-danger" id="delete-list-btn" style="padding:8px 12px;font-size:13px">🗑️ Supprimer la liste</button>
+    </div>
     <div class="share-section">
       <strong style="font-size:14px;color:var(--violet-dark)">🔗 Partager avec vos proches</strong>
       <p class="hint" style="margin:6px 0 0">Liste synchronisée : vos ajouts sont visibles immédiatement par vos proches, même après le partage du lien.</p>
@@ -360,6 +375,23 @@ async function renderServerList(list, adminToken) {
       sUrl.select(); document.execCommand('copy');
       toast('Lien copié, collez-le dans un message !');
     }
+  };
+
+  document.getElementById('delete-list-btn').onclick = async () => {
+    if (!confirm("Supprimer cette liste et toutes ses idées ? Vos proches n'auront plus accès au lien partagé.")) return;
+    if (adminToken) {
+      await fetch('api/lists/' + list.id, {
+        method: 'DELETE', headers: { 'X-Admin-Token': adminToken }
+      }).catch(() => {});
+    }
+    const lists = loadLists();
+    delete lists[list.id];
+    saveLists(lists);
+    const admins = loadAdmin();
+    delete admins[list.id];
+    saveAdmin(admins);
+    location.hash = '#/';
+    toast('Liste supprimée');
   };
 }
 
