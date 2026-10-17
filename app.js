@@ -335,6 +335,10 @@ function renderEditForm(onSave, existing) {
   };
   showPreview();
 
+  overlay.querySelector('#photo-box').addEventListener('click', () => {
+    overlay.querySelector('#photo-input').click();
+  });
+
   overlay.querySelector('#photo-input').onchange = e => {
     const f = e.target.files[0];
     if (!f) return;
@@ -350,6 +354,7 @@ function renderEditForm(onSave, existing) {
       showPreview();
     };
     img.src = URL.createObjectURL(f);
+    e.target.value = '';
   };
 
   const close = () => overlay.remove();
