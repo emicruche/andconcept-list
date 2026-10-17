@@ -80,7 +80,7 @@ function headerHtml(sub) {
   return `<div class="header">
     <img class="logo" src="icon.svg" alt="">
     <div style="flex:1;min-width:0"><h1>AndConcept List</h1><div class="subtitle">${esc(sub)}</div></div>
-    <select id="lang-select" title="${esc(t('lang_label'))}" style="border:1.5px solid #e5ddf5;border-radius:10px;padding:6px 8px;font-size:13px;font-weight:700;background:#fff;color:var(--violet-dark);flex-shrink:0">
+    <select id="lang-select" title="${esc(t('lang_label'))}" aria-label="${esc(t('lang_label'))}" style="align-self:center;border:1px solid var(--violet-light);border-radius:8px;padding:2px 4px;font-size:11px;font-weight:700;background:#fff;color:var(--violet-dark);flex-shrink:0;max-width:52px;-webkit-appearance:none;appearance:none;text-align:center">
       <option value="fr" ${LANG === 'fr' ? 'selected' : ''}>FR</option>
       <option value="nl" ${LANG === 'nl' ? 'selected' : ''}>NL</option>
       <option value="en" ${LANG === 'en' ? 'selected' : ''}>EN</option>
