@@ -503,6 +503,10 @@ async function renderShared(list, token) {
       : items;
 
     let html = headerHtml(`Liste de « ${esc(serverList?.name || list.name)} »`);
+    const myAdmin = serverList ? loadAdmin()[serverList.id] : null;
+    if (myAdmin) {
+      html += `<button class="btn btn-primary btn-block" id="open-as-owner-btn" style="margin-bottom:14px">✏️ C'est ma liste — l'ouvrir en mode édition</button>`;
+    }
     html += `<div class="card">
       <h2>🎁 Liste de ${esc(serverList?.name || list.name)}</h2>
       <p class="hint">Filtrez par budget pour trouver une idée dans votre prix. Réservez en secret : la personne ne saura pas qui a choisi quoi.</p>
@@ -560,6 +564,8 @@ async function renderShared(list, token) {
       currentFilter = c.dataset.budget ? parseFloat(c.dataset.budget) : null;
       render();
     });
+    const ownerBtn = document.getElementById('open-as-owner-btn');
+    if (ownerBtn) ownerBtn.onclick = () => { location.hash = '#/l/' + serverList.id; };
     app.querySelectorAll('[data-res]').forEach(b => b.onclick = () => reserve(b.dataset.res));
     app.querySelectorAll('[data-unres]').forEach(b => b.onclick = () => {
       delete reservations[b.dataset.unres];
