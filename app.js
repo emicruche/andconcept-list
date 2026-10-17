@@ -60,7 +60,13 @@ async function route() {
   const h = location.hash || '#/';
   const shareM = h.match(/^#\/s\/(.+)$/);
   const editM = h.match(/^#\/e\/(.+)$/);
-  if (shareM) return renderShared(decodeToken(shareM[1]), shareM[1]);
+  if (shareM) {
+    // Liens serveur (srv:<id>) : pas de base64 à décoder, le contenu
+    // vient de l'API. On passe une liste vide en attendant le chargement.
+    const srvM = shareM[1].match(/^srv:(.+)$/);
+    if (srvM) return renderShared({ name: '', items: [] }, shareM[1]);
+    return renderShared(decodeToken(shareM[1]), shareM[1]);
+  }
   if (editM) return renderOwnerList(decodeToken(editM[1]), null);
   const listM = h.match(/^#\/l\/([^/]+)$/);
   if (listM && (await hasBackend())) {
@@ -302,7 +308,15 @@ async function renderServerList(list, adminToken) {
       return;
     }
     const r = await fetch('api/lists/' + list.id);
-    if (r.ok) renderServerList(await r.json(), adminToken);
+    if (r.ok) {
+      const fresh = await r.json();
+      // Mettre à jour la copie locale (nom + idées) pour que l'accueil
+      // affiche le bon compte d'idées et survive hors-ligne.
+      const lists = loadLists();
+      lists[list.id] = { ...(lists[list.id] || {}), id: list.id, name: fresh.name, items: fresh.items, mode: 'server' };
+      saveLists(lists);
+      renderServerList(fresh, adminToken);
+    }
   }
 
   document.getElementById('add-gift-btn').onclick = () => renderEditForm(async item => {
