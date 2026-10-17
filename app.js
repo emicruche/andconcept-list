@@ -263,6 +263,7 @@ async function renderServerList(list, adminToken) {
         <input type="text" readonly id="share-url" value="${esc(location.origin + location.pathname + '#/s/srv:' + list.id)}">
         <button class="btn btn-primary" id="copy-btn" style="padding:10px 14px">Copier</button>
       </div>
+      <div style="margin-top:10px"><button class="btn btn-rose btn-block" id="native-share-btn">📤 Partager… (WhatsApp, SMS…)</button></div>
     </div>
   </div>`;
 
@@ -334,6 +335,21 @@ async function renderServerList(list, adminToken) {
   document.getElementById('copy-btn').onclick = async () => {
     try { await navigator.clipboard.writeText(sUrl.value); toast('Lien copié !'); }
     catch { sUrl.select(); document.execCommand('copy'); toast('Lien copié !'); }
+  };
+  const nativeBtn = document.getElementById('native-share-btn');
+  if (nativeBtn) nativeBtn.onclick = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'AndConcept List', text: `Voici ma liste de cadeaux « ${list.name} » 🎁`, url: sUrl.value });
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+        sUrl.select(); document.execCommand('copy');
+        toast('Partage indisponible — lien copié dans le presse-papiers !');
+      }
+    } else {
+      sUrl.select(); document.execCommand('copy');
+      toast('Lien copié, collez-le dans un message !');
+    }
   };
 }
 
@@ -517,10 +533,6 @@ async function renderShared(list, token) {
       : items;
 
     let html = headerHtml(`Liste de « ${esc(serverList?.name || list.name)} »`);
-    const myAdmin = serverList ? loadAdmin()[serverList.id] : null;
-    if (myAdmin) {
-      html += `<button class="btn btn-primary btn-block" id="open-as-owner-btn" style="margin-bottom:14px">✏️ C'est ma liste — l'ouvrir en mode édition</button>`;
-    }
     html += `<div class="card">
       <h2>🎁 Liste de ${esc(serverList?.name || list.name)}</h2>
       <p class="hint">Filtrez par budget pour trouver une idée dans votre prix. Réservez en secret : la personne ne saura pas qui a choisi quoi.</p>
@@ -578,8 +590,6 @@ async function renderShared(list, token) {
       currentFilter = c.dataset.budget ? parseFloat(c.dataset.budget) : null;
       render();
     });
-    const ownerBtn = document.getElementById('open-as-owner-btn');
-    if (ownerBtn) ownerBtn.onclick = () => { location.hash = '#/l/' + serverList.id; };
     app.querySelectorAll('[data-res]').forEach(b => b.onclick = () => reserve(b.dataset.res));
     app.querySelectorAll('[data-unres]').forEach(b => b.onclick = () => {
       delete reservations[b.dataset.unres];
