@@ -123,6 +123,23 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true });
   }
 
+  // ---- Aperçu dynamique pour WhatsApp/messageries (mode synchronisé) ----
+  // Les messageries ne lisent pas le fragment #/… : quand le lien de partage
+  // contient ?list=<id>, on sert des balises Open Graph avec le nom de la liste.
+  if (p === '/index.html' && req.method === 'GET' && url.searchParams.has('list')) {
+    const list = db.lists[url.searchParams.get('list')];
+    const title = list ? list.name : 'Liste de cadeaux';
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    return res.end(`<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<title>${title.replace(/</g, '&lt;')} — AndConcept List</title>
+<meta property="og:title" content="${title.replace(/</g, '&lt;')} 🎁 — AndConcept List">
+<meta property="og:description" content="Une liste de cadeaux partagée avec vous — filtrez par budget et réservez en secret.">
+<meta property="og:image" content="${'http'}s://emicruche.github.io/andconcept-list/icon-512.png">
+<meta http-equiv="refresh" content="0; url=#/s/srv:${url.searchParams.get('list')}">
+</head><body></body></html>`);
+  }
+
   // ---- Fichiers statiques (PWA) ----
   let file = p === '/' ? '/index.html' : p;
   const full = path.normalize(path.join(ROOT, file));
