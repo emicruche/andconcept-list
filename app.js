@@ -79,38 +79,43 @@ async function route() {
 function headerHtml(sub) {
   return `<div class="header">
     <img class="logo" src="icon.svg" alt="">
-    <div><h1>AndConcept List</h1><div class="subtitle">${esc(sub)}</div></div>
+    <div style="flex:1;min-width:0"><h1>AndConcept List</h1><div class="subtitle">${esc(sub)}</div></div>
+    <select id="lang-select" title="${esc(t('lang_label'))}" style="border:1.5px solid #e5ddf5;border-radius:10px;padding:6px 8px;font-size:13px;font-weight:700;background:#fff;color:var(--violet-dark);flex-shrink:0">
+      <option value="fr" ${LANG === 'fr' ? 'selected' : ''}>FR</option>
+      <option value="nl" ${LANG === 'nl' ? 'selected' : ''}>NL</option>
+      <option value="en" ${LANG === 'en' ? 'selected' : ''}>EN</option>
+    </select>
   </div>`;
 }
 
 function installTip() {
   const sa = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  return sa ? '' : `<div class="install-tip">📲 <span>Installez l'appli : menu du navigateur → « Ajouter à l'écran d'accueil ».</span></div>`;
+  return sa ? '' : `<div class="install-tip"><span>${t('install_tip')}</span></div>`;
 }
 
 // ---- Accueil ----
 async function renderHome() {
   const online = await hasBackend();
   const lists = loadLists();
-  let html = headerHtml('Vos listes de cadeaux') + installTip();
+  let html = headerHtml(t('subtitleHome')) + installTip();
 
   html += `<div class="card">
-    <h2>🎉 Nouvelle liste</h2>
+    <h2>${t('new_list_title')}</h2>
     <p class="hint">Créez une liste d'idées cadeaux pendant que vous visitez un magasin — ou la boutique <a href="https://andconceptstore.com/" target="_blank" rel="noopener" style="color:var(--rose-dark);font-weight:700">And Concept Store</a> — puis partagez-la par lien.</p>
-    <label class="field">Pour qui est cette liste ?</label>
-    <input type="text" id="new-list-name" placeholder="Ex. Anniversaire de Léa" maxlength="60">
-    <div style="margin-top:14px"><button class="btn btn-primary btn-block" id="create-list-btn">Créer la liste</button></div>
+    <label class="field">${t('new_list_label')}</label>
+    <input type="text" id="new-list-name" placeholder="${esc(t('new_list_placeholder'))}" maxlength="60">
+    <div style="margin-top:14px"><button class="btn btn-primary btn-block" id="create-list-btn">${t('create_list')}</button></div>
   </div>`;
 
   const entries = Object.values(lists);
   if (entries.length) {
-    html += `<h2 style="font-family:'Playfair Display',Georgia,serif;font-size:16px;margin:18px 4px 10px">Mes listes</h2>`;
+    html += `<h2 style="font-family:'Playfair Display',Georgia,serif;font-size:16px;margin:18px 4px 10px">${t('my_lists')}</h2>`;
     for (const l of entries) {
       const count = l.items.length;
       html += `<div class="card" style="cursor:pointer" data-open="${l.id}">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div><strong>${esc(l.name)}</strong>
-          <div style="font-size:12.5px;color:var(--muted)">${count} idée${count > 1 ? 's' : ''}${l.mode === 'server' ? ' · ☁ synchronisée' : ''}</div></div>
+          <div style="font-size:12.5px;color:var(--muted)">${t('idea_count', count)}${l.mode === 'server' ? ' · ' + t('synced') : ''}</div></div>
           <span style="color:var(--violet)">›</span>
         </div>
       </div>`;
@@ -125,7 +130,7 @@ async function renderHome() {
 
   document.getElementById('create-list-btn').onclick = async () => {
     const name = document.getElementById('new-list-name').value.trim();
-    if (!name) return toast('Donnez un nom à la liste');
+    if (!name) return toast(t('give_list_name'));
     if (await hasBackend()) {
       const r = await fetch('api/lists', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -176,23 +181,23 @@ function renderOwnerList(payload, listId) {
   html += `<div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <h2 style="margin:0">${esc(list.name)}</h2>
-      <button class="btn btn-danger" id="delete-list-btn" style="padding:8px 12px;font-size:13px">🗑️ Supprimer la liste</button>
+      <button class="btn btn-danger" id="delete-list-btn" style="padding:8px 12px;font-size:13px">${t('delete_list')}</button>
     </div>
     <div class="share-section" style="margin-top:12px">
-      <strong style="font-size:14px;color:var(--violet-dark)">🔗 Partager avec vos proches</strong>
-      <p class="hint" style="margin:6px 0 0">Vos proches verront la liste, filtreront par budget et réserveront en secret.</p>
+      <strong style="font-size:14px;color:var(--violet-dark)">${t('share_title')}</strong>
+      <p class="hint" style="margin:6px 0 0">${t('share_hint_local')}</p>
       <div class="share-link-box">
         <input type="text" readonly id="share-url" value="${esc(shareUrl(list))}">
-        <button class="btn btn-primary" id="copy-btn" style="padding:10px 14px">Copier</button>
+        <button class="btn btn-primary" id="copy-btn" style="padding:10px 14px">${t('copy')}</button>
       </div>
-      <div style="margin-top:10px"><button class="btn btn-rose btn-block" id="native-share-btn">📤 Partager…</button></div>
+      <div style="margin-top:10px"><button class="btn btn-rose btn-block" id="native-share-btn">${t('share_btn')}</button></div>
     </div>
   </div>`;
 
-  html += `<button class="btn btn-primary btn-block" id="add-gift-btn" style="margin-bottom:16px">＋ Ajouter une idée cadeau</button>`;
+  html += `<button class="btn btn-primary btn-block" id="add-gift-btn" style="margin-bottom:16px">${t('add_gift')}</button>`;
 
   if (!list.items.length) {
-    html += `<div class="empty-state"><div class="big">🛍️</div>Aucune idée pour l'instant.<br>Ajoutez ce qui vous fait envie en rayon !</div>`;
+    html += `<div class="empty-state"><div class="big">🛍️</div>${t('empty_list')}</div>`;
   } else {
     for (const it of list.items) {
       html += `<div class="gift-item" data-id="${it.id}">
@@ -220,16 +225,16 @@ function renderOwnerList(payload, listId) {
   const refresh = () => { persist(); renderOwnerList(list, listId); };
 
   document.getElementById('delete-list-btn').onclick = () => {
-    if (!confirm('Supprimer cette liste et toutes ses idées ?')) return;
+    if (!confirm(t('confirm_delete_local'))) return;
     const lists = loadLists();
     delete lists[listId];
     saveLists(lists);
     location.hash = '#/';
-    toast('Liste supprimée');
+    toast(t('list_deleted'));
   };
 
   document.getElementById('add-gift-btn').onclick = () => renderEditForm(item => {
-    list.items.push(item); refresh(); toast('Idée ajoutée 🎉');
+    list.items.push(item); refresh(); toast(t('idea_added'));
   });
   app.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
     list.items = list.items.filter(x => x.id !== b.dataset.del); refresh();
@@ -246,21 +251,21 @@ function renderOwnerList(payload, listId) {
 
   const sUrl = document.getElementById('share-url');
   document.getElementById('copy-btn').onclick = async () => {
-    try { await navigator.clipboard.writeText(sUrl.value); toast('Lien copié !'); }
-    catch { sUrl.select(); document.execCommand('copy'); toast('Lien copié !'); }
+    try { await navigator.clipboard.writeText(sUrl.value); toast(t('link_copied')); }
+    catch { sUrl.select(); document.execCommand('copy'); toast(t('link_copied')); }
   };
   document.getElementById('native-share-btn').onclick = async () => {
     if (navigator.share) {
       const lightUrl = location.origin + location.pathname + '#/s/' + lightToken(list);
       try {
-        await navigator.share({ title: 'AndConcept List', text: `Voici ma liste de cadeaux « ${list.name} » 🎁`, url: lightUrl });
+        await navigator.share({ title: 'AndConcept List', text: t('share_msg', list.name), url: lightUrl });
       } catch (err) {
         if (err && err.name === 'AbortError') return;
         sUrl.value = lightUrl;
         sUrl.select(); document.execCommand('copy');
-        toast('Partage refusé — lien copié, collez-le dans un message !');
+        toast(t('link_copied_paste'));
       }
-    } else { sUrl.select(); document.execCommand('copy'); toast('Lien copié, collez-le dans un message !'); }
+    } else { sUrl.select(); document.execCommand('copy'); toast(t('link_copied_paste')); }
   };
 }
 
@@ -274,20 +279,20 @@ async function renderServerList(list, adminToken) {
   html += `<div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
       <h2 style="margin:0">${esc(list.name)}</h2>
-      <button class="btn btn-danger" id="delete-list-btn" style="padding:8px 12px;font-size:13px">🗑️ Supprimer la liste</button>
+      <button class="btn btn-danger" id="delete-list-btn" style="padding:8px 12px;font-size:13px">${t('delete_list')}</button>
     </div>
     <div class="share-section">
-      <strong style="font-size:14px;color:var(--violet-dark)">🔗 Partager avec vos proches</strong>
-      <p class="hint" style="margin:6px 0 0">Liste synchronisée : vos ajouts sont visibles immédiatement par vos proches, même après le partage du lien.</p>
+      <strong style="font-size:14px;color:var(--violet-dark)">${t('share_title')}</strong>
+      <p class="hint" style="margin:6px 0 0">${t('share_hint_server')}</p>
       <div class="share-link-box">
         <input type="text" readonly id="share-url" value="${esc(location.origin + location.pathname + '#/s/srv:' + list.id)}">
-        <button class="btn btn-primary" id="copy-btn" style="padding:10px 14px">Copier</button>
+        <button class="btn btn-primary" id="copy-btn" style="padding:10px 14px">${t('copy')}</button>
       </div>
       <div style="margin-top:10px"><button class="btn btn-rose btn-block" id="native-share-btn">📤 Partager… (WhatsApp, SMS…)</button></div>
     </div>
   </div>`;
 
-  html += `<button class="btn btn-primary btn-block" id="add-gift-btn" style="margin-bottom:16px">＋ Ajouter une idée cadeau</button>`;
+  html += `<button class="btn btn-primary btn-block" id="add-gift-btn" style="margin-bottom:16px">${t('add_gift')}</button>`;
 
   if (!list.items.length) {
     html += `<div class="empty-state"><div class="big">🛍️</div>Aucune idée pour l'instant.</div>`;
@@ -301,7 +306,7 @@ async function renderServerList(list, adminToken) {
           <div class="price">${fmtPrice(it.price)}</div>
           ${it.store ? `<div class="meta">📍 ${esc(it.store)}</div>` : ''}
           ${it.note ? `<div class="note">« ${esc(it.note)} »</div>` : ''}
-          ${adminToken ? `<span class="badge ${reserved ? 'reserved' : 'available'}">${reserved ? '✔ Réservé (par qui ? mystère !)' : 'Disponible'}</span>` : ''}
+          ${adminToken ? `<span class="badge ${reserved ? 'reserved' : 'available'}">${reserved ? t('reserved_by_whom') : t('available')}</span>` : ''}
         </div>
         <div class="gift-actions">
           <button class="icon-btn" data-edit="${it.id}" title="Modifier">✏️</button>
@@ -324,7 +329,7 @@ async function renderServerList(list, adminToken) {
     if (!ok) {
       // Le serveur n'a pas confirmé : on garde l'écran tel quel (l'idée est
       // déjà dans list.items) et on avertit plutôt que de tout effacer.
-      toast('⚠️ Serveur injoignable — idée gardée, réessayez plus tard');
+      toast(t('server_unreachable'));
       renderServerList({ ...list, reservedIds: [] }, adminToken);
       return;
     }
@@ -341,7 +346,7 @@ async function renderServerList(list, adminToken) {
   }
 
   document.getElementById('add-gift-btn').onclick = () => renderEditForm(async item => {
-    list.items.push(item); await sync(); toast('Idée ajoutée et synchronisée 🎉');
+    list.items.push(item); await sync(); toast(t('idea_added_sync'));
   });
   app.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
     list.items = list.items.filter(x => x.id !== b.dataset.del); await sync();
@@ -358,27 +363,27 @@ async function renderServerList(list, adminToken) {
 
   const sUrl = document.getElementById('share-url');
   document.getElementById('copy-btn').onclick = async () => {
-    try { await navigator.clipboard.writeText(sUrl.value); toast('Lien copié !'); }
-    catch { sUrl.select(); document.execCommand('copy'); toast('Lien copié !'); }
+    try { await navigator.clipboard.writeText(sUrl.value); toast(t('link_copied')); }
+    catch { sUrl.select(); document.execCommand('copy'); toast(t('link_copied')); }
   };
   const nativeBtn = document.getElementById('native-share-btn');
   if (nativeBtn) nativeBtn.onclick = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'AndConcept List', text: `Voici ma liste de cadeaux « ${list.name} » 🎁`, url: sUrl.value });
+        await navigator.share({ title: 'AndConcept List', text: t('share_msg', list.name), url: sUrl.value });
       } catch (err) {
         if (err && err.name === 'AbortError') return;
         sUrl.select(); document.execCommand('copy');
-        toast('Partage indisponible — lien copié dans le presse-papiers !');
+        toast(t('share_fallback'));
       }
     } else {
       sUrl.select(); document.execCommand('copy');
-      toast('Lien copié, collez-le dans un message !');
+      toast(t('link_copied_paste'));
     }
   };
 
   document.getElementById('delete-list-btn').onclick = async () => {
-    if (!confirm("Supprimer cette liste et toutes ses idées ? Vos proches n'auront plus accès au lien partagé.")) return;
+    if (!confirm(t('confirm_delete'))) return;
     if (adminToken) {
       await fetch('api/lists/' + list.id, {
         method: 'DELETE', headers: { 'X-Admin-Token': adminToken }
@@ -391,7 +396,7 @@ async function renderServerList(list, adminToken) {
     delete admins[list.id];
     saveAdmin(admins);
     location.hash = '#/';
-    toast('Liste supprimée');
+    toast(t('list_deleted'));
   };
 }
 
@@ -410,8 +415,8 @@ function renderGiftDetail(item, opts = {}) {
     <div style="font-size:17px;font-weight:800;color:var(--rose-dark);margin-bottom:6px">${fmtPrice(item.price)}</div>
     ${item.store ? `<div style="font-size:14px;color:var(--text);margin-bottom:4px">📍 ${esc(item.store)}</div>` : ''}
     ${item.note ? `<div style="font-size:14px;color:var(--muted);font-style:italic;margin:8px 0">« ${esc(item.note)} »</div>` : ''}
-    ${opts.reserved ? `<span class="badge reserved">✔ Réservé</span>` : `<span class="badge available">Disponible</span>`}
-    <button class="btn btn-secondary btn-block" id="close-detail-btn" style="margin-top:16px">Fermer</button>
+    ${opts.reserved ? `<span class="badge reserved">${t('reserved')}</span>` : `<span class="badge available">${t('available')}</span>`}
+    <button class="btn btn-secondary btn-block" id="close-detail-btn" style="margin-top:16px">${t('close')}</button>
   </div>`;
   document.body.appendChild(overlay);
   const close = () => overlay.remove();
@@ -425,24 +430,24 @@ function renderEditForm(onSave, existing) {
   const overlay = document.createElement('div');
   overlay.innerHTML = `<div style="position:fixed;inset:0;background:rgba(58,26,158,0.45);z-index:50;display:flex;align-items:flex-end;justify-content:center" id="form-overlay">
     <div style="background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto">
-      <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:17px;margin-bottom:6px">${isEdit ? 'Modifier l\'idée' : 'Nouvelle idée cadeau'}</h2>
-      <label class="field">Photo de l'article (optionnel)</label>
+      <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:17px;margin-bottom:6px">${isEdit ? t('edit_idea') : t('new_idea')}</h2>
+      <label class="field">${t('photo_label')}</label>
       <label class="photo-box" for="photo-input">
-        📷 Prendre / choisir une photo
+        ${t('take_photo')}
         <input type="file" id="photo-input" accept="image/*" capture="environment">
       </label>
       <div id="photo-preview"></div>
-      <label class="field">Nom de l'article *</label>
-      <input type="text" id="f-title" placeholder="Ex. Boucles d'oreilles perles tissées" maxlength="80" value="${esc(existing?.title || '')}">
-      <label class="field">Prix (€) — saisie libre</label>
+      <label class="field">${t('title_label')}</label>
+      <input type="text" id="f-title" placeholder="${esc(t('title_placeholder'))}" maxlength="80" value="${esc(existing?.title || '')}">
+      <label class="field">${t('price_label')}</label>
       <input type="number" id="f-price" placeholder="Ex. 25" min="0" step="0.01" inputmode="decimal" value="${existing?.price ?? ''}">
-      <label class="field">Magasin / créateur / rayon</label>
-      <input type="text" id="f-store" placeholder="Ex. And Concept Store — bijoux" maxlength="80" value="${esc(existing?.store || '')}">
-      <label class="field">Précisions (taille, couleur, matière…)</label>
-      <textarea id="f-note" placeholder="Ex. couleur turquoise" maxlength="200">${esc(existing?.note || '')}</textarea>
+      <label class="field">${t('store_label')}</label>
+      <input type="text" id="f-store" placeholder="${esc(t('store_placeholder'))}" maxlength="80" value="${esc(existing?.store || '')}">
+      <label class="field">${t('note_label')}</label>
+      <textarea id="f-note" placeholder="${esc(t('note_placeholder'))}" maxlength="200">${esc(existing?.note || '')}</textarea>
       <div style="display:flex;gap:10px;margin-top:18px">
-        <button class="btn btn-secondary" id="cancel-btn" style="flex:1">Annuler</button>
-        <button class="btn btn-primary" id="save-btn" style="flex:1">${isEdit ? 'Enregistrer' : 'Ajouter'}</button>
+        <button class="btn btn-secondary" id="cancel-btn" style="flex:1">${t('cancel')}</button>
+        <button class="btn btn-primary" id="save-btn" style="flex:1">${isEdit ? t('save_edit') : t('save_new')}</button>
       </div>
     </div>
   </div>`;
@@ -482,7 +487,7 @@ function renderEditForm(onSave, existing) {
 
   overlay.querySelector('#save-btn').onclick = () => {
     const title = overlay.querySelector('#f-title').value.trim();
-    if (!title) return toast('Donnez un nom à l\'article');
+    if (!title) return toast(t('give_item_name'));
     const price = parseFloat(overlay.querySelector('#f-price').value);
     onSave({
       id: existing?.id || uid(),
@@ -551,8 +556,8 @@ function shareUrl(list) {
 // ---- Vue partagée (proches) ----
 async function renderShared(list, token) {
   if (!list) {
-    app.innerHTML = headerHtml('Lien invalide') +
-      `<div class="empty-state"><div class="big">😕</div>Ce lien de liste est invalide ou corrompu.<br>Demandez un nouveau lien.</div>`;
+    app.innerHTML = headerHtml(t('invalid_title')) +
+      `<div class="empty-state"><div class="big">😕</div>${t('invalid_link')}</div>`;
     return;
   }
 
@@ -569,9 +574,9 @@ async function renderShared(list, token) {
   const guestName = localStorage.getItem(GUEST_KEY) || '';
 
   async function reserve(itemId) {
-    const name = prompt('Vos prénom et nom (restera secret) :', guestName);
+    const name = prompt(t('your_name'), guestName);
     if (name === null) return;
-    const n = name.trim() || 'Quelqu\'un';
+    const n = name.trim() || t('someone');
     localStorage.setItem(GUEST_KEY, n);
     if (serverList) {
       await fetch(`api/lists/${serverList.id}/reserve`, {
@@ -579,14 +584,14 @@ async function renderShared(list, token) {
         body: JSON.stringify({ itemId, by: n })
       });
       const r = await fetch('api/lists/' + serverList.id);
-      if (r.ok) { serverList = await r.json(); render(); toast('Réservé en secret ✔'); return; }
+      if (r.ok) { serverList = await r.json(); render(); toast(t('reserved_secret')); return; }
     }
     reservations[itemId] = { name: n, ts: Date.now() };
     const all = JSON.parse(localStorage.getItem(RES_KEY) || '{}');
     all[resKey] = reservations;
     localStorage.setItem(RES_KEY, JSON.stringify(all));
     render();
-    toast('Réservé en secret ✔');
+    toast(t('reserved_secret'));
   }
 
   function render() {
@@ -598,30 +603,30 @@ async function renderShared(list, token) {
       ? items.filter(it => !res[it.id] && it.price && it.price <= currentFilter)
       : items;
 
-    let html = headerHtml(`Liste de « ${esc(serverList?.name || list.name)} »`);
+    let html = headerHtml(t('guest_header', serverList?.name || list.name));
     const myAdmin = serverList ? loadAdmin()[serverList.id] : null;
     if (myAdmin) {
-      html += `<button class="btn btn-primary btn-block" id="open-as-owner-btn" style="margin-bottom:14px">✏️ C'est ma liste — l'ouvrir en mode édition</button>`;
+      html += `<button class="btn btn-primary btn-block" id="open-as-owner-btn" style="margin-bottom:14px">${t('open_owner')}</button>`;
     }
     html += `<div class="card">
-      <h2>🎁 Liste de ${esc(serverList?.name || list.name)}</h2>
-      <p class="hint">Filtrez par budget pour trouver une idée dans votre prix. Réservez en secret : la personne ne saura pas qui a choisi quoi.</p>
+      <h2>${esc(t('guest_card', serverList?.name || list.name))}</h2>
+      <p class="hint">${t('guest_hint')}</p>
       <div class="budget-filter">
-        <input type="number" id="budget-input" placeholder="Budget max (€)" min="0" step="1" inputmode="decimal" value="${currentFilter ?? ''}">
-        <button class="chip ${!currentFilter ? 'active' : ''}" data-budget="">Tout</button>
+        <input type="number" id="budget-input" placeholder="${esc(t('budget_placeholder'))}" min="0" step="1" inputmode="decimal" value="${currentFilter ?? ''}">
+        <button class="chip ${!currentFilter ? 'active' : ''}" data-budget="">${t('all')}</button>
         <button class="chip" data-budget="20">≤ 20 €</button>
         <button class="chip" data-budget="50">≤ 50 €</button>
       </div>`;
 
     if (currentFilter) {
       const ok = visible.length;
-      html += `<div class="result-line">${ok} idée${ok > 1 ? 's' : ''} <strong>encore disponible${ok > 1 ? 's' : ''}</strong> à ≤ ${currentFilter} €</div>`;
+      html += `<div class="result-line">${t('still_available', ok)} <strong>${t('available').toLowerCase()}</strong> ${currentFilter} €</div>`;
     }
 
     if (!items.length) {
-      html += `<div class="empty-state"><div class="big">📭</div>Cette liste est encore vide.</div>`;
+      html += `<div class="empty-state"><div class="big">📭</div>${t('empty_shared')}</div>`;
     } else if (!visible.length && currentFilter) {
-      html += `<div class="empty-state"><div class="big">🤷</div>Aucune idée disponible dans ce budget.<br>Essayez un montant un peu plus grand.</div>`;
+      html += `<div class="empty-state"><div class="big">🤷</div>${t('no_match_budget')}</div>`;
     } else {
       for (const it of visible) {
         const r = res[it.id];
@@ -632,19 +637,19 @@ async function renderShared(list, token) {
             <div class="price">${fmtPrice(it.price)}</div>
             ${it.store ? `<div class="meta">📍 ${esc(it.store)}</div>` : ''}
             ${it.note ? `<div class="note">« ${esc(it.note)} »</div>` : ''}
-            <span class="badge ${r ? 'reserved' : 'available'}">${r ? '✔ Réservé' : 'Disponible'}</span>
+            <span class="badge ${r ? 'reserved' : 'available'}">${r ? t('reserved') : t('available')}</span>
           </div>
           <div class="gift-actions">
             ${r
-              ? (reservations[it.id] ? `<button class="btn btn-danger" data-unres="${it.id}" style="padding:8px 12px;font-size:13px">Annuler</button>` : '')
-              : `<button class="btn btn-rose" data-res="${it.id}" style="padding:8px 12px;font-size:13px">Réserver</button>`}
+              ? (reservations[it.id] ? `<button class="btn btn-danger" data-unres="${it.id}" style="padding:8px 12px;font-size:13px">${t('unreserve')}</button>` : '')
+              : `<button class="btn btn-rose" data-res="${it.id}" style="padding:8px 12px;font-size:13px">${t('reserve')}</button>`}
           </div>
         </div>`;
       }
     }
     html += `</div>`;
     if (Object.keys(res).length) {
-      html += `<div class="reservation-note">🔐 Les réservations sont confidentielles : la personne concernée ne saura jamais qui a réservé quoi.</div>`;
+      html += `<div class="reservation-note">${t('secret_note')}</div>`;
     }
     app.innerHTML = html;
 
@@ -681,8 +686,18 @@ async function renderShared(list, token) {
 }
 
 // ---- Démarrage ----
-window.addEventListener('hashchange', route);
-route();
+function bindLangSelect() {
+  const sel = document.getElementById('lang-select');
+  if (sel) sel.onchange = () => setLang(sel.value);
+}
+
+async function routeAndBind() {
+  await route();
+  bindLangSelect();
+}
+
+window.addEventListener('hashchange', routeAndBind);
+routeAndBind();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
