@@ -156,6 +156,14 @@ function renderOwnerList(payload, listId) {
   let list = payload;
   const lists = loadLists();
   if (listId && lists[listId]) list = lists[listId];
+  if (!listId || !lists[listId]) {
+    // Liste inconnue en local (lien ouvert depuis un autre appareil/URL) :
+    // on l'enregistre pour que les ajouts soient bien persistés.
+    listId = listId || uid();
+    lists[listId] = { ...list, id: listId, mode: 'local', createdAt: Date.now() };
+    saveLists(lists);
+    list = lists[listId];
+  }
 
   let html = `<a class="back-link" href="#/">‹ Mes listes</a>` + headerHtml(esc(list.name));
 
@@ -196,8 +204,9 @@ function renderOwnerList(payload, listId) {
   app.innerHTML = html;
 
   const persist = () => {
-    if (listId && lists[listId]) { lists[listId] = list; saveLists(lists); }
-    history.replaceState(null, '', `#/e/${encodeToken(list)}|${listId || ''}`);
+    lists[listId] = list;
+    saveLists(lists);
+    history.replaceState(null, '', `#/e/${encodeToken(list)}|${listId}`);
   };
   const refresh = () => { persist(); renderOwnerList(list, listId); };
 
@@ -277,10 +286,21 @@ async function renderServerList(list, adminToken) {
   app.innerHTML = html;
 
   async function sync() {
-    await fetch('api/lists/' + list.id, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
-      body: JSON.stringify({ items: list.items })
-    });
+    let ok = false;
+    try {
+      const put = await fetch('api/lists/' + list.id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
+        body: JSON.stringify({ items: list.items })
+      });
+      ok = put.ok;
+    } catch { ok = false; }
+    if (!ok) {
+      // Le serveur n'a pas confirmé : on garde l'écran tel quel (l'idée est
+      // déjà dans list.items) et on avertit plutôt que de tout effacer.
+      toast('⚠️ Serveur injoignable — idée gardée, réessayez plus tard');
+      renderServerList({ ...list, reservedIds: [] }, adminToken);
+      return;
+    }
     const r = await fetch('api/lists/' + list.id);
     if (r.ok) renderServerList(await r.json(), adminToken);
   }
