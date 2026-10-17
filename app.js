@@ -219,8 +219,15 @@ function renderOwnerList(payload, listId) {
   };
   document.getElementById('native-share-btn').onclick = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: 'AndConcept List', text: `Voici ma liste de cadeaux « ${list.name} » 🎁`, url: sUrl.value }); }
-      catch { /* annulé */ }
+      const lightUrl = location.origin + location.pathname + '#/s/' + lightToken(list);
+      try {
+        await navigator.share({ title: 'AndConcept List', text: `Voici ma liste de cadeaux « ${list.name} » 🎁`, url: lightUrl });
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+        sUrl.value = lightUrl;
+        sUrl.select(); document.execCommand('copy');
+        toast('Partage refusé — lien copié, collez-le dans un message !');
+      }
     } else { sUrl.select(); document.execCommand('copy'); toast('Lien copié, collez-le dans un message !'); }
   };
 }
@@ -376,8 +383,37 @@ function renderEditForm(onSave, existing) {
 // ---- Tokens autonomes ----
 function encodeToken(list) {
   const payload = { n: list.name, i: list.items.map(it => ({ t: it.title, p: it.price, s: it.store, o: it.note, ph: it.photo })) };
-  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  let b64;
+  try {
+    b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  } catch {
+    // Trop volumineux (photos) : réessayer sans les photos du tout.
+    const light = { n: list.name, i: payload.i.map(x => ({ ...x, ph: null })) };
+    b64 = btoa(unescape(encodeURIComponent(JSON.stringify(light))));
+  }
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function lightToken(list) {
+  // Version compacte pour les partageurs stricts (WhatsApp, SMS…) : miniatures minuscules.
+  const items = list.items.map(it => ({ t: it.title, p: it.price, s: it.store, o: it.note, ph: shrinkPhoto(it.photo, 96, 0.45) }));
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({ n: list.name, i: items }))));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function shrinkPhoto(dataUrl, max, quality) {
+  if (!dataUrl || !dataUrl.startsWith('data:image')) return null;
+  try {
+    const img = new Image();
+    img.src = dataUrl;
+    if (!img.width || !img.height) return null;
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', quality);
+  } catch { return null; }
 }
 
 function decodeToken(token) {
