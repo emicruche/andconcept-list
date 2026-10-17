@@ -2,6 +2,8 @@
 
 PWA de listes de cadeaux partagées, inspirée de l'esprit de la boutique [And Concept Store](https://andconceptstore.com/).
 
+👉 **[Guide utilisateur](GUIDE.md)** — installation, création de liste, partage, réservation.
+
 ## Concept
 
 - **Créateur** : crée une liste d'idées cadeaux (photo, nom, prix en saisie libre, magasin, précisions) et la partage par lien.

@@ -1,4 +1,5 @@
 :root {
+  /* Palette officielle And Concept Store */
   --violet: #5025d1;
   --violet-dark: #3a1a9e;
   --violet-soft: #673de6;
@@ -9,7 +10,7 @@
   --gold: #fea419;
   --green: #008361;
   --green-light: #def4f0;
-  --bg: #f7f3ee;
+  --bg: #f2cac7;
   --card: #ffffff;
   --text: #36344d;
   --muted: #727586;
@@ -277,7 +278,7 @@ textarea { resize: vertical; min-height: 70px; }
 
 .chip.active { background: var(--rose); border-color: var(--rose); color: #fff; }
 
-.result-line { font-size: 13.5px; color: var(--muted); margin-bottom: 12px; }
+.result-line { font-size: 13.5px; color: var(--text); margin-bottom: 12px; background: #ffffffcc; border-radius: 10px; padding: 6px 10px; display: inline-block; }
 .result-line strong { color: var(--rose-dark); }
 
 .reservation-note {
@@ -328,8 +329,8 @@ textarea { resize: vertical; min-height: 70px; }
 }
 
 .install-tip {
-  background: var(--violet-light);
-  border: 1px solid #d5dfff;
+  background: #ffffff;
+  border: 1px solid var(--violet-light);
   color: var(--violet-dark);
   border-radius: 12px;
   padding: 10px 14px;
