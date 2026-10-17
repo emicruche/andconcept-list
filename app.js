@@ -686,18 +686,14 @@ async function renderShared(list, token) {
 }
 
 // ---- Démarrage ----
-function bindLangSelect() {
-  const sel = document.getElementById('lang-select');
-  if (sel) sel.onchange = () => setLang(sel.value);
-}
+// Délégation d'événement: un seul listener permanent sur le document,
+// insensible aux re-rendus de l'interface et fiable sur iOS Safari.
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'lang-select') setLang(e.target.value);
+});
 
-async function routeAndBind() {
-  await route();
-  bindLangSelect();
-}
-
-window.addEventListener('hashchange', routeAndBind);
-routeAndBind();
+window.addEventListener('hashchange', route);
+route();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});

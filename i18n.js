@@ -239,5 +239,5 @@ function setLang(l) {
   if (!I18N[l]) return;
   LANG = l;
   localStorage.setItem(LANG_KEY, l);
-  if (typeof routeAndBind === 'function') routeAndBind();
+  if (typeof route === 'function') route();
 }
