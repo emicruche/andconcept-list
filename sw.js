@@ -1,7 +1,8 @@
-const CACHE = 'andconcept-v6';
+const CACHE = 'andconcept-v7';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js',
-  './manifest.json', './icon.svg', './icon-maskable.svg'
+  './manifest.json', './icon.svg', './icon-maskable.svg',
+  './icon-192.png', './icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -18,6 +19,17 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+
+  const url = new URL(e.request.url);
+
+  // Jamais de cache pour l'API : les données doivent toujours venir du
+  // serveur (sinon les listes et réservations restent figées au cache).
+  if (url.pathname.includes('/api/')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // Fichiers statiques : cache d'abord, réseau en secours.
   e.respondWith(
     caches.match(e.request).then(cached =>
       cached || fetch(e.request).then(resp => {
