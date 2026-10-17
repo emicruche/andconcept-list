@@ -135,6 +135,7 @@ input:focus, textarea:focus, select:focus {
 textarea { resize: vertical; min-height: 70px; }
 
 .photo-box {
+  display: block;
   border: 2px dashed #b39ef3;
   border-radius: 12px;
   padding: 18px;
@@ -144,9 +145,17 @@ textarea { resize: vertical; min-height: 70px; }
   font-weight: 700;
   font-size: 14px;
   background: #faf7ff;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.photo-box input { display: none; }
+.photo-box input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
 
 .photo-preview { margin-top: 10px; position: relative; }
 

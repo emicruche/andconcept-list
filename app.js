@@ -304,10 +304,10 @@ function renderEditForm(onSave, existing) {
     <div style="background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto">
       <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:17px;margin-bottom:6px">${isEdit ? 'Modifier l\'idée' : 'Nouvelle idée cadeau'}</h2>
       <label class="field">Photo de l'article (optionnel)</label>
-      <div class="photo-box" id="photo-box">
+      <label class="photo-box" for="photo-input">
         📷 Prendre / choisir une photo
-        <input type="file" id="photo-input" accept="image/*">
-      </div>
+        <input type="file" id="photo-input" accept="image/*" capture="environment">
+      </label>
       <div id="photo-preview"></div>
       <label class="field">Nom de l'article *</label>
       <input type="text" id="f-title" placeholder="Ex. Boucles d'oreilles perles tissées" maxlength="80" value="${esc(existing?.title || '')}">
@@ -334,10 +334,6 @@ function renderEditForm(onSave, existing) {
     if (photo) preview.querySelector('#rm-photo').onclick = () => { photo = null; showPreview(); };
   };
   showPreview();
-
-  overlay.querySelector('#photo-box').addEventListener('click', () => {
-    overlay.querySelector('#photo-input').click();
-  });
 
   overlay.querySelector('#photo-input').onchange = e => {
     const f = e.target.files[0];
