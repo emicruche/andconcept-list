@@ -218,7 +218,9 @@ textarea { resize: vertical; min-height: 70px; }
   font-size: 26px;
 }
 
-.gift-item .info { flex: 1; min-width: 0; }
+.gift-item .info { flex: 1; min-width: 0; cursor: pointer; }
+
+.gift-item .info:active { opacity: 0.7; }
 .gift-item .title { font-weight: 800; font-size: 15px; word-wrap: break-word; }
 .gift-item .price { font-size: 14px; font-weight: 800; color: var(--rose-dark); margin-top: 2px; }
 .gift-item .meta { font-size: 12px; color: var(--muted); margin-top: 3px; }

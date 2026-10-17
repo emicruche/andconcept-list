@@ -226,6 +226,11 @@ function renderOwnerList(payload, listId) {
     const item = list.items.find(x => x.id === b.dataset.edit);
     renderEditForm(updated => { Object.assign(item, updated); refresh(); }, item);
   });
+  app.querySelectorAll('.gift-item .info').forEach(el => el.onclick = () => {
+    const card = el.closest('.gift-item');
+    const item = list.items.find(x => x.id === card.dataset.id);
+    if (item) renderGiftDetail(item);
+  });
 
   const sUrl = document.getElementById('share-url');
   document.getElementById('copy-btn').onclick = async () => {
@@ -274,7 +279,7 @@ async function renderServerList(list, adminToken) {
   } else {
     for (const it of list.items) {
       const reserved = (list.reservedIds || []).includes(it.id);
-      html += `<div class="gift-item ${reserved ? 'reserved' : ''}">
+      html += `<div class="gift-item ${reserved ? 'reserved' : ''}" data-id="${it.id}">
         ${it.photo ? `<img class="thumb" src="${it.photo}" alt="">` : `<div class="no-photo">🎁</div>`}
         <div class="info">
           <div class="title">${esc(it.title)}</div>
@@ -330,6 +335,11 @@ async function renderServerList(list, adminToken) {
     const item = list.items.find(x => x.id === b.dataset.edit);
     renderEditForm(async updated => { Object.assign(item, updated); await sync(); }, item);
   });
+  app.querySelectorAll('.gift-item .info').forEach(el => el.onclick = () => {
+    const card = el.closest('.gift-item');
+    const item = list.items.find(x => x.id === card.dataset.id);
+    if (item) renderGiftDetail(item, { reserved: (list.reservedIds || []).includes(item.id) });
+  });
 
   const sUrl = document.getElementById('share-url');
   document.getElementById('copy-btn').onclick = async () => {
@@ -354,6 +364,30 @@ async function renderServerList(list, adminToken) {
 }
 
 // ---- Formulaire article (commun) ----
+// ---- Fiche détail d'une idée ----
+function renderGiftDetail(item, opts = {}) {
+  const overlay = document.createElement('div');
+  overlay.id = 'detail-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(58,26,158,0.55);z-index:60;display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML = `<div style="background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:18px;margin:0">${esc(item.title)}</h2>
+      <button class="icon-btn" id="close-detail" style="font-size:20px">✕</button>
+    </div>
+    ${item.photo ? `<img src="${item.photo}" alt="" style="width:100%;max-height:300px;object-fit:contain;border-radius:14px;background:#f7f3ee;margin-bottom:12px">` : ''}
+    <div style="font-size:17px;font-weight:800;color:var(--rose-dark);margin-bottom:6px">${fmtPrice(item.price)}</div>
+    ${item.store ? `<div style="font-size:14px;color:var(--text);margin-bottom:4px">📍 ${esc(item.store)}</div>` : ''}
+    ${item.note ? `<div style="font-size:14px;color:var(--muted);font-style:italic;margin:8px 0">« ${esc(item.note)} »</div>` : ''}
+    ${opts.reserved ? `<span class="badge reserved">✔ Réservé</span>` : `<span class="badge available">Disponible</span>`}
+    <button class="btn btn-secondary btn-block" id="close-detail-btn" style="margin-top:16px">Fermer</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#close-detail').onclick = close;
+  overlay.querySelector('#close-detail-btn').onclick = close;
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
 function renderEditForm(onSave, existing) {
   const isEdit = !!existing;
   const overlay = document.createElement('div');
@@ -533,6 +567,10 @@ async function renderShared(list, token) {
       : items;
 
     let html = headerHtml(`Liste de « ${esc(serverList?.name || list.name)} »`);
+    const myAdmin = serverList ? loadAdmin()[serverList.id] : null;
+    if (myAdmin) {
+      html += `<button class="btn btn-primary btn-block" id="open-as-owner-btn" style="margin-bottom:14px">✏️ C'est ma liste — l'ouvrir en mode édition</button>`;
+    }
     html += `<div class="card">
       <h2>🎁 Liste de ${esc(serverList?.name || list.name)}</h2>
       <p class="hint">Filtrez par budget pour trouver une idée dans votre prix. Réservez en secret : la personne ne saura pas qui a choisi quoi.</p>
@@ -555,7 +593,7 @@ async function renderShared(list, token) {
     } else {
       for (const it of visible) {
         const r = res[it.id];
-        html += `<div class="gift-item ${r ? 'reserved' : ''}">
+        html += `<div class="gift-item ${r ? 'reserved' : ''}" data-id="${it.id}">
           ${it.photo ? `<img class="thumb" src="${it.photo}" alt="">` : `<div class="no-photo">🎁</div>`}
           <div class="info">
             <div class="title">${esc(it.title)}</div>
@@ -589,6 +627,14 @@ async function renderShared(list, token) {
     app.querySelectorAll('[data-budget]').forEach(c => c.onclick = () => {
       currentFilter = c.dataset.budget ? parseFloat(c.dataset.budget) : null;
       render();
+    });
+    const ownerBtn = document.getElementById('open-as-owner-btn');
+    if (ownerBtn) ownerBtn.onclick = () => { location.hash = '#/l/' + serverList.id; };
+    app.querySelectorAll('.gift-item .info').forEach(el => el.onclick = () => {
+      const card = el.closest('.gift-item');
+      const items = serverList ? serverList.items : list.items;
+      const item = items.find(x => x.id === card.dataset.id);
+      if (item) renderGiftDetail(item, { reserved: !!res[item.id] });
     });
     app.querySelectorAll('[data-res]').forEach(b => b.onclick = () => reserve(b.dataset.res));
     app.querySelectorAll('[data-unres]').forEach(b => b.onclick = () => {
