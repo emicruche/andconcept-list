@@ -74,6 +74,7 @@ const I18N = {
     invalid_title: 'Lien invalide',
     open_owner: '✏️ C\'est ma liste — l\'ouvrir en mode édition',
     install_tip: '📲 Installez l\'appli : menu du navigateur → « Ajouter à l\'écran d\'accueil ».',
+    disclaimer: 'AndConcept List est un service de listes de cadeaux partagées entre proches, indépendant de la boutique And Concept Store. Les listes ne sont pas liées aux stocks des magasins ; vérifiez la disponibilité des articles directement en boutique. Réservations basées sur la confiance — aucune donnée bancaire n\'est collectée.',
     lang_label: 'Langue'
   },
   nl: {
@@ -147,6 +148,7 @@ const I18N = {
     invalid_title: 'Ongeldige link',
     open_owner: '✏️ Dit is mijn lijst — openen in bewerkingsmodus',
     install_tip: '📲 Installeer de app: browsermenu → « Toevoegen aan beginscherm ».',
+    disclaimer: 'AndConcept List is een dienst voor gedeelde cadeauwensenlijsten tussen dierbaren, onafhankelijk van de winkel And Concept Store. De lijsten zijn niet gekoppeld aan de voorraad van winkels; controleer de beschikbaarheid van artikelen rechtstreeks in de winkel. Reserveringen zijn gebaseerd op vertrouwen — er worden geen betaalgegevens verzameld.',
     lang_label: 'Taal'
   },
   en: {
@@ -220,6 +222,7 @@ const I18N = {
     invalid_title: 'Invalid link',
     open_owner: '✏️ This is my list — open in edit mode',
     install_tip: '📲 Install the app: browser menu → “Add to Home Screen”.',
+    disclaimer: 'AndConcept List is a shared gift list service between loved ones, independent from the And Concept Store shop. Lists are not linked to shop inventories; check item availability directly in store. Reservations are trust-based — no payment data is collected.',
     lang_label: 'Language'
   }
 };

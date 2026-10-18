@@ -158,6 +158,10 @@ async function renderHome() {
     if (!l) return;
     location.hash = l.mode === 'server' ? `#/l/${l.id}` : `#/e/${encodeToken(l)}|${l.id}`;
   });
+  const disc = document.createElement('div');
+  disc.className = 'disclaimer';
+  disc.textContent = t('disclaimer');
+  app.appendChild(disc);
 }
 
 // ---- Liste en mode autonome (encodée dans l'URL) ----
@@ -267,6 +271,10 @@ function renderOwnerList(payload, listId) {
       }
     } else { sUrl.select(); document.execCommand('copy'); toast(t('link_copied_paste')); }
   };
+  const disc1 = document.createElement('div');
+  disc1.className = 'disclaimer';
+  disc1.textContent = t('disclaimer');
+  app.appendChild(disc1);
 }
 
 // ---- Liste en mode serveur (synchronisée) ----
@@ -398,6 +406,10 @@ async function renderServerList(list, adminToken) {
     location.hash = '#/';
     toast(t('list_deleted'));
   };
+  const disc2 = document.createElement('div');
+  disc2.className = 'disclaimer';
+  disc2.textContent = t('disclaimer');
+  app.appendChild(disc2);
 }
 
 // ---- Formulaire article (commun) ----
@@ -652,6 +664,10 @@ async function renderShared(list, token) {
       html += `<div class="reservation-note">${t('secret_note')}</div>`;
     }
     app.innerHTML = html;
+    const disc3 = document.createElement('div');
+    disc3.className = 'disclaimer';
+    disc3.textContent = t('disclaimer');
+    app.appendChild(disc3);
 
     const input = document.getElementById('budget-input');
     input.oninput = () => {
