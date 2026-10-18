@@ -1,0 +1,15 @@
+{
+  "name": "andconcept-list",
+  "version": "1.0.0",
+  "description": "AndConcept List — PWA de listes de cadeaux partagées (partage par lien, filtre budget, réservation secrète)",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "pg": "^8.12.0"
+  }
+}

@@ -1,7 +1,8 @@
 'use strict';
 
-// AndConcept List — serveur léger, zéro dépendance (Node >= 16).
-// Usage: node server/server.js  (PORT=3000 par défaut, DATA_FILE pour persistance)
+// AndConcept List — serveur, Node >= 16.
+// Persistance: PostgreSQL si DATABASE_URL est défini, sinon fichier JSON (local).
+// Usage: node server/server.js  (PORT=3000 par défaut)
 
 const http = require('http');
 const fs = require('fs');
@@ -10,23 +11,129 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const ROOT = path.join(__dirname, '..');
+const DATABASE_URL = process.env.DATABASE_URL;
 
-let db = { lists: {}, reservations: {} };
-try { db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch { /* premier démarrage */ }
-let saveTimer = null;
-function persist() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => fs.writeFile(DATA_FILE, JSON.stringify(db), () => {}), 100);
+// ---------- Couche de stockage ----------
+let pg = null;
+if (DATABASE_URL) {
+  try { pg = require('pg'); } catch { pg = null; }
 }
 
+let store;
+
+if (pg) {
+  const pool = new pg.Pool({ connectionString: DATABASE_URL, ssl: DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false } });
+  store = {
+    kind: 'postgres',
+    async init() {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS lists (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          admin_token TEXT NOT NULL,
+          items JSONB NOT NULL DEFAULT '[]'::jsonb,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+        CREATE TABLE IF NOT EXISTS reservations (
+          list_id TEXT NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+          item_id TEXT NOT NULL,
+          by_name TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          PRIMARY KEY (list_id, item_id)
+        );
+      `);
+    },
+    async createList(id, name, adminToken) {
+      await pool.query('INSERT INTO lists (id, name, admin_token) VALUES ($1, $2, $3)', [id, name, adminToken]);
+    },
+    async getList(id) {
+      const r = await pool.query('SELECT id, name, admin_token, items FROM lists WHERE id = $1', [id]);
+      if (r.rowCount === 0) return null;
+      const res = await pool.query('SELECT item_id FROM reservations WHERE list_id = $1', [id]);
+      return { id: r.rows[0].id, name: r.rows[0].name, adminToken: r.rows[0].admin_token, items: r.rows[0].items, reservedIds: res.rows.map(x => x.item_id) };
+    },
+    async updateList(id, name, items) {
+      if (name !== undefined && items !== undefined)
+        return (await pool.query('UPDATE lists SET name = $2, items = $3 WHERE id = $1', [id, name, items])).rowCount;
+      if (items !== undefined)
+        return (await pool.query('UPDATE lists SET items = $2 WHERE id = $1', [id, JSON.stringify(items)])).rowCount;
+      if (name !== undefined)
+        return (await pool.query('UPDATE lists SET name = $2 WHERE id = $1', [id, name])).rowCount;
+      return 0;
+    },
+    async deleteList(id) {
+      await pool.query('DELETE FROM reservations WHERE list_id = $1', [id]);
+      return (await pool.query('DELETE FROM lists WHERE id = $1', [id])).rowCount;
+    },
+    async reserve(listId, itemId, by) {
+      const r = await pool.query(
+        'INSERT INTO reservations (list_id, item_id, by_name) VALUES ($1, $2, $3) ON CONFLICT (list_id, item_id) DO NOTHING',
+        [listId, itemId, by]
+      );
+      return r.rowCount; // 0 si déjà réservé
+    },
+    async unreserve(listId, itemId) {
+      return (await pool.query('DELETE FROM reservations WHERE list_id = $1 AND item_id = $2', [listId, itemId])).rowCount;
+    }
+  };
+} else {
+  // Repli fichier JSON (mode local / sans base)
+  let db = { lists: {}, reservations: {} };
+  try { db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch { /* premier démarrage */ }
+  let saveTimer = null;
+  const persist = () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => fs.writeFile(DATA_FILE, JSON.stringify(db), () => {}), 100);
+  };
+  store = {
+    kind: 'file',
+    async init() {},
+    async createList(id, name, adminToken) { db.lists[id] = { id, name, adminToken, items: [] }; persist(); },
+    async getList(id) {
+      const l = db.lists[id];
+      if (!l) return null;
+      return { id: l.id, name: l.name, adminToken: l.adminToken, items: l.items, reservedIds: Object.keys(db.reservations[id] || {}) };
+    },
+    async updateList(id, name, items) {
+      const l = db.lists[id];
+      if (!l) return 0;
+      if (name !== undefined) l.name = name;
+      if (items !== undefined) l.items = items;
+      persist();
+      return 1;
+    },
+    async deleteList(id) {
+      if (!db.lists[id]) return 0;
+      delete db.lists[id];
+      delete db.reservations[id];
+      persist();
+      return 1;
+    },
+    async reserve(listId, itemId, by) {
+      db.reservations[listId] = db.reservations[listId] || {};
+      if (db.reservations[listId][itemId]) return 0;
+      db.reservations[listId][itemId] = { by, ts: Date.now() };
+      persist();
+      return 1;
+    },
+    async unreserve(listId, itemId) {
+      const r = db.reservations[listId];
+      if (!r || !r[itemId]) return 0;
+      delete r[itemId];
+      persist();
+      return 1;
+    }
+  };
+}
+
+// ---------- Utilitaires ----------
 function uid() {
   return require('crypto').randomBytes(9).toString('base64url');
 }
 
 function json(res, code, obj) {
-  const body = JSON.stringify(obj);
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(body);
+  res.end(JSON.stringify(obj));
 }
 
 function readBody(req) {
@@ -41,115 +148,101 @@ function readBody(req) {
   });
 }
 
+// ---------- Serveur ----------
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://localhost');
-  const p = url.pathname;
+  try {
+    const url = new URL(req.url, 'http://localhost');
+    const p = url.pathname;
 
-  // ---- API ----
-  if (p === '/api/health' && req.method === 'GET')
-    return json(res, 200, { ok: true, app: 'AndConcept List' });
+    if (p === '/api/health' && req.method === 'GET')
+      return json(res, 200, { ok: true, app: 'AndConcept List', store: store.kind });
 
-  if (p === '/api/lists' && req.method === 'POST') {
-    const body = await readBody(req);
-    const name = String(body.name || '').trim();
-    if (!name) return json(res, 400, { error: 'nom manquant' });
-    const id = uid();
-    const adminToken = uid();
-    db.lists[id] = { id, name, items: [], createdAt: Date.now(), adminToken };
-    persist();
-    return json(res, 201, { id, adminToken });
-  }
+    if (p === '/api/lists' && req.method === 'POST') {
+      const body = await readBody(req);
+      const name = String(body.name || '').trim();
+      if (!name) return json(res, 400, { error: 'nom manquant' });
+      const id = uid();
+      const adminToken = uid();
+      await store.createList(id, name, adminToken);
+      return json(res, 201, { id, adminToken });
+    }
 
-  const m = p.match(/^\/api\/lists\/([^/]+)$/);
-  if (m && req.method === 'GET') {
-    const list = db.lists[m[1]];
-    if (!list) return json(res, 404, { error: 'liste inconnue' });
-    const reserved = db.reservations[m[1]] || {};
-    return json(res, 200, {
-      id: list.id, name: list.name, items: list.items,
-      reservedIds: Object.keys(reserved)
-    });
-  }
+    const m = p.match(/^\/api\/lists\/([^/]+)$/);
+    if (m && req.method === 'GET') {
+      const list = await store.getList(m[1]);
+      if (!list) return json(res, 404, { error: 'liste inconnue' });
+      return json(res, 200, { id: list.id, name: list.name, items: list.items, reservedIds: list.reservedIds });
+    }
 
-  if (m && req.method === 'PUT') {
-    const list = db.lists[m[1]];
-    if (!list) return json(res, 404, { error: 'liste inconnue' });
-    const auth = req.headers['x-admin-token'];
-    if (auth !== list.adminToken) return json(res, 403, { error: 'non autorisé' });
-    const body = await readBody(req);
-    if (typeof body.name === 'string' && body.name.trim()) list.name = body.name.trim();
-    if (Array.isArray(body.items)) list.items = body.items;
-    persist();
-    return json(res, 200, { ok: true });
-  }
+    if (m && req.method === 'PUT') {
+      const list = await store.getList(m[1]);
+      if (!list) return json(res, 404, { error: 'liste inconnue' });
+      if (req.headers['x-admin-token'] !== list.adminToken) return json(res, 403, { error: 'non autorisé' });
+      const body = await readBody(req);
+      const n = await store.updateList(m[1], body.name !== undefined ? String(body.name).trim() || undefined : undefined, body.items);
+      return json(res, 200, { ok: true });
+    }
 
-  if (m && req.method === 'DELETE') {
-    const list = db.lists[m[1]];
-    if (!list) return json(res, 404, { error: 'liste inconnue' });
-    if (req.headers['x-admin-token'] !== list.adminToken) return json(res, 403, { error: 'non autorisé' });
-    delete db.lists[m[1]];
-    delete db.reservations[m[1]];
-    persist();
-    return json(res, 200, { ok: true });
-  }
+    if (m && req.method === 'DELETE') {
+      const list = await store.getList(m[1]);
+      if (!list) return json(res, 404, { error: 'liste inconnue' });
+      if (req.headers['x-admin-token'] !== list.adminToken) return json(res, 403, { error: 'non autorisé' });
+      await store.deleteList(m[1]);
+      return json(res, 200, { ok: true });
+    }
 
-  const rm = p.match(/^\/api\/lists\/([^/]+)\/reserve$/);
-  if (rm && req.method === 'POST') {
-    const id = rm[1];
-    const list = db.lists[id];
-    if (!list) return json(res, 404, { error: 'liste inconnue' });
-    const body = await readBody(req);
-    const itemId = String(body.itemId || '');
-    if (!list.items.some(i => i.id === itemId)) return json(res, 400, { error: 'article inconnu' });
-    db.reservations[id] = db.reservations[id] || {};
-    if (db.reservations[id][itemId]) return json(res, 409, { error: 'déjà réservé' });
-    // Secret : le nom du réservataire n'est jamais renvoyé au propriétaire de la liste.
-    db.reservations[id][itemId] = { by: String(body.by || 'Quelqu\'un'), ts: Date.now() };
-    persist();
-    return json(res, 200, { ok: true });
-  }
+    const rm = p.match(/^\/api\/lists\/([^/]+)\/reserve$/);
+    if (rm && req.method === 'POST') {
+      const list = await store.getList(rm[1]);
+      if (!list) return json(res, 404, { error: 'liste inconnue' });
+      const body = await readBody(req);
+      const itemId = String(body.itemId || '');
+      if (!list.items.some(i => i.id === itemId)) return json(res, 400, { error: 'article inconnu' });
+      const ok = await store.reserve(rm[1], itemId, String(body.by || 'Quelqu\'un'));
+      if (!ok) return json(res, 409, { error: 'déjà réservé' });
+      return json(res, 200, { ok: true });
+    }
 
-  if (rm && req.method === 'DELETE') {
-    const id = rm[1];
-    const body = await readBody(req);
-    const itemId = String(body.itemId || '');
-    const secret = String(body.secret || '');
-    const r = (db.reservations[id] || {})[itemId];
-    if (!r) return json(res, 404, { error: 'réservation inconnue' });
-    // Seul le réservataire (via son secret local) peut annuler sa réservation.
-    if (r.secret && r.secret !== secret) return json(res, 403, { error: 'non autorisé' });
-    delete db.reservations[id][itemId];
-    persist();
-    return json(res, 200, { ok: true });
-  }
+    if (rm && req.method === 'DELETE') {
+      const body = await readBody(req);
+      const n = await store.unreserve(rm[1], String(body.itemId || ''));
+      if (!n) return json(res, 404, { error: 'réservation inconnue' });
+      return json(res, 200, { ok: true });
+    }
 
-  // ---- Aperçu dynamique pour WhatsApp/messageries (mode synchronisé) ----
-  // Les messageries ne lisent pas le fragment #/… : quand le lien de partage
-  // contient ?list=<id>, on sert des balises Open Graph avec le nom de la liste.
-  if (p === '/index.html' && req.method === 'GET' && url.searchParams.has('list')) {
-    const list = db.lists[url.searchParams.get('list')];
-    const title = list ? list.name : 'Liste de cadeaux';
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    return res.end(`<!DOCTYPE html>
+    // Aperçu dynamique pour WhatsApp (mode synchronisé)
+    if (p === '/index.html' && req.method === 'GET' && url.searchParams.has('list')) {
+      const list = await store.getList(url.searchParams.get('list'));
+      const title = list ? list.name : 'Liste de cadeaux';
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(`<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8">
 <title>${title.replace(/</g, '&lt;')} — AndConcept List</title>
 <meta property="og:title" content="${title.replace(/</g, '&lt;')} 🎁 — AndConcept List">
 <meta property="og:description" content="Une liste de cadeaux partagée avec vous — filtrez par budget et réservez en secret.">
-<meta property="og:image" content="${'http'}s://emicruche.github.io/andconcept-list/icon-512.png">
+<meta property="og:image" content="https://andconcept-list.onrender.com/icon-512.png">
 <meta http-equiv="refresh" content="0; url=#/s/srv:${url.searchParams.get('list')}">
 </head><body></body></html>`);
-  }
+    }
 
-  // ---- Fichiers statiques (PWA) ----
-  let file = p === '/' ? '/index.html' : p;
-  const full = path.normalize(path.join(ROOT, file));
-  if (!full.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
-  const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml' };
-  fs.readFile(full, (err, buf) => {
-    if (err) { res.writeHead(404); return res.end('404'); }
-    res.writeHead(200, { 'Content-Type': types[path.extname(full)] || 'application/octet-stream' });
-    res.end(buf);
-  });
+    // Fichiers statiques (PWA)
+    let file = p === '/' ? '/index.html' : p;
+    const full = path.normalize(path.join(ROOT, file));
+    if (!full.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
+    const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png' };
+    fs.readFile(full, (err, buf) => {
+      if (err) { res.writeHead(404); return res.end('404'); }
+      res.writeHead(200, { 'Content-Type': types[path.extname(full)] || 'application/octet-stream' });
+      res.end(buf);
+    });
+  } catch (e) {
+    json(res, 500, { error: 'erreur interne' });
+  }
 });
 
-server.listen(PORT, () => console.log(`AndConcept List — serveur sur le port ${PORT}`));
+store.init().then(() => {
+  server.listen(PORT, () => console.log(`AndConcept List — serveur sur le port ${PORT} (stockage: ${store.kind})`));
+}).catch(e => {
+  console.error('Échec initialisation stockage:', e);
+  process.exit(1);
+});
