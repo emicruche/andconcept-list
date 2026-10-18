@@ -18,6 +18,11 @@ PWA de listes de cadeaux partagées, inspirée de l'esprit de la boutique [And C
 
 L'app détecte le backend automatiquement (`/api/health`) et bascule en mode autonome si absent.
 
+## Persistance
+
+En production (Render) : PostgreSQL via la variable `DATABASE_URL`.
+En local : fichier `server/data.json` (repli automatique).
+
 ## Lancer
 
 ```bash
