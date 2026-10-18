@@ -428,7 +428,7 @@ function renderGiftDetail(item, opts = {}) {
 function renderEditForm(onSave, existing) {
   const isEdit = !!existing;
   const overlay = document.createElement('div');
-  overlay.innerHTML = `<div style="position:fixed;inset:0;background:rgba(58,26,158,0.45);z-index:50;display:flex;align-items:flex-end;justify-content:center" id="form-overlay">
+  overlay.innerHTML = `<div style="position:fixed;inset:0;background:rgba(214,49,99,0.45);z-index:50;display:flex;align-items:flex-end;justify-content:center" id="form-overlay">
     <div style="background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto">
       <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:17px;margin-bottom:6px">${isEdit ? t('edit_idea') : t('new_idea')}</h2>
       <label class="field">${t('photo_label')}</label>

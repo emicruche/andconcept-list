@@ -1,9 +1,9 @@
 :root {
   /* Palette officielle And Concept Store */
-  --violet: #5025d1;
-  --violet-dark: #3a1a9e;
-  --violet-soft: #673de6;
-  --violet-light: #ebe4ff;
+  --violet: #fc5185;
+  --violet-dark: #d63163;
+  --violet-soft: #fc5185;
+  --violet-light: #ffe8ef;
   --rose: #fc5185;
   --rose-dark: #d63163;
   --rose-light: #ffe8ef;
@@ -15,7 +15,7 @@
   --text: #36344d;
   --muted: #727586;
   --radius: 16px;
-  --shadow: 0 4px 14px rgba(80, 37, 209, 0.10);
+  --shadow: 0 4px 14px rgba(214, 49, 99, 0.12);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,7 +45,7 @@ body {
   height: 40px;
   border-radius: 12px;
   flex-shrink: 0;
-  box-shadow: 0 3px 8px rgba(80, 37, 209, 0.3);
+  box-shadow: 0 3px 8px rgba(214, 49, 99, 0.3);
 }
 
 .header h1 {
@@ -119,7 +119,7 @@ label.field {
 input[type="text"], input[type="number"], textarea, select {
   width: 100%;
   padding: 12px 14px;
-  border: 1.5px solid #e5ddf5;
+  border: 1.5px solid #ffd9e4;
   border-radius: 12px;
   font-size: 15px;
   font-family: inherit;
@@ -130,14 +130,14 @@ input[type="text"], input[type="number"], textarea, select {
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--violet-soft);
-  box-shadow: 0 0 0 3px rgba(103, 61, 230, 0.15);
+  box-shadow: 0 0 0 3px rgba(252, 81, 133, 0.15);
 }
 
 textarea { resize: vertical; min-height: 70px; }
 
 .photo-box {
   display: block;
-  border: 2px dashed #b39ef3;
+  border: 2px dashed #fea8c2;
   border-radius: 12px;
   padding: 18px;
   text-align: center;
@@ -145,7 +145,7 @@ textarea { resize: vertical; min-height: 70px; }
   color: var(--violet);
   font-weight: 700;
   font-size: 14px;
-  background: #faf7ff;
+  background: #fff5f8;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -266,7 +266,7 @@ textarea { resize: vertical; min-height: 70px; }
 .budget-filter input { flex: 1; min-width: 110px; }
 
 .chip {
-  border: 1.5px solid #e5ddf5;
+  border: 1.5px solid #ffd9e4;
   background: #fff;
   color: var(--violet-dark);
   padding: 7px 14px;
@@ -291,14 +291,14 @@ textarea { resize: vertical; min-height: 70px; }
 }
 
 .share-section {
-  background: linear-gradient(135deg, var(--violet-light), var(--rose-light));
+  background: linear-gradient(135deg, #ffe8ef, #fff0f5);
   border-radius: var(--radius);
   padding: 16px;
   margin-top: 6px;
 }
 
 .share-link-box { display: flex; gap: 8px; margin-top: 10px; }
-.share-link-box input { flex: 1; font-size: 12.5px; background: #fff; border-color: #d5dfff; }
+.share-link-box input { flex: 1; font-size: 12.5px; background: #fff; border-color: #ffd9e4; }
 
 .toast {
   position: fixed;
