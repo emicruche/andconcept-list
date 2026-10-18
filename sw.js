@@ -1,4 +1,4 @@
-const CACHE = 'andconcept-v17';
+const CACHE = 'andconcept-v18';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './i18n.js',
   './manifest.json', './icon.svg', './icon-maskable.svg',

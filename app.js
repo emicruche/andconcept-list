@@ -101,7 +101,7 @@ async function renderHome() {
 
   html += `<div class="card">
     <h2>${t('new_list_title')}</h2>
-    <p class="hint">Créez une liste d'idées cadeaux pendant que vous visitez un magasin — ou la boutique <a href="https://andconceptstore.com/" target="_blank" rel="noopener" style="color:var(--rose-dark);font-weight:700">And Concept Store</a> — puis partagez-la par lien.</p>
+    <p class="hint">${t('new_list_hint_a')} <a href="https://andconceptstore.com/" target="_blank" rel="noopener" style="color:var(--rose-dark);font-weight:700">And Concept Store</a> ${t('new_list_hint_b')}</p>
     <label class="field">${t('new_list_label')}</label>
     <input type="text" id="new-list-name" placeholder="${esc(t('new_list_placeholder'))}" maxlength="60">
     <div style="margin-top:14px"><button class="btn btn-primary btn-block" id="create-list-btn">${t('create_list')}</button></div>
@@ -288,7 +288,7 @@ async function renderServerList(list, adminToken) {
         <input type="text" readonly id="share-url" value="${esc(location.origin + location.pathname + '#/s/srv:' + list.id)}">
         <button class="btn btn-primary" id="copy-btn" style="padding:10px 14px">${t('copy')}</button>
       </div>
-      <div style="margin-top:10px"><button class="btn btn-rose btn-block" id="native-share-btn">📤 Partager… (WhatsApp, SMS…)</button></div>
+      <div style="margin-top:10px"><button class="btn btn-rose btn-block" id="native-share-btn">${t('share_btn')}</button></div>
     </div>
   </div>`;
 

@@ -1,9 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <rect width="512" height="512" rx="96" fill="#fc5185"/>
 <g fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
-<rect x="128" y="160" width="256" height="224" rx="24"/>
-<path d="M176 160c0-64 32-96 80-96s80 32 80 96"/>
+<rect x="128" y="200" width="256" height="200" rx="24"/>
+<path d="M176 200c0-58 32-88 80-88s80 30 80 88"/>
 </g>
-<circle cx="256" cy="272" r="52" fill="#fc5185"/>
-<path d="M236 272l14 14 28-30" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="256" cy="300" r="44" fill="#fff"/>
+<path d="M239 300l12 12 24-26" fill="none" stroke="#d63163" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- chapeau père Noël -->
+<g>
+<path d="M300 60 C 360 70, 420 120, 430 190 L 392 200 C 380 140, 336 100, 288 92 Z" fill="#e33442"/>
+<path d="M256 60 C 300 62, 356 92, 396 160 L 340 178 C 312 118, 282 90, 248 86 Z" fill="#fff" opacity="0.0"/>
+<rect x="272" y="76" width="150" height="34" rx="17" transform="rotate(15 347 93)" fill="#fff"/>
+<circle cx="286" cy="78" r="24" fill="#fff"/>
+</g>
+<!-- flocons -->
+<g fill="#fff" opacity="0.85">
+<circle cx="96" cy="120" r="7"/>
+<circle cx="120" cy="96" r="5"/>
+<circle cx="86" cy="150" r="5"/>
+<circle cx="430" cy="280" r="6"/>
+<circle cx="452" cy="312" r="4"/>
+<circle cx="410" cy="330" r="4"/>
+</g>
 </svg>

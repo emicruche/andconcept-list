@@ -5,7 +5,8 @@ const I18N = {
   fr: {
     subtitleHome: 'Vos listes de cadeaux',
     new_list_title: '🎉 Nouvelle liste',
-    new_list_hint: 'Créez une liste d\'idées cadeaux pendant que vous visitez un magasin — ou la boutique And Concept Store — puis partagez-la par lien.',
+    new_list_hint_a: 'Créez une liste d\'idées cadeaux pendant que vous visitez un magasin — ou la boutique',
+    new_list_hint_b: '— puis partagez-la par lien.',
     new_list_label: 'Pour qui est cette liste ?',
     new_list_placeholder: 'Ex. Anniversaire de Léa',
     create_list: 'Créer la liste',
@@ -78,7 +79,8 @@ const I18N = {
   nl: {
     subtitleHome: 'Uw cadeauwensenlijsten',
     new_list_title: '🎉 Nieuwe lijst',
-    new_list_hint: 'Maak een lijst met cadeau-ideeën tijdens uw bezoek aan een winkel — of de And Concept Store — en deel ze per link.',
+    new_list_hint_a: 'Maak een lijst met cadeau-ideeën tijdens uw bezoek aan een winkel — of de',
+    new_list_hint_b: '— en deel ze per link.',
     new_list_label: 'Voor wie is deze lijst?',
     new_list_placeholder: 'Bijv. Verjaardag van Léa',
     create_list: 'Lijst aanmaken',
@@ -150,7 +152,8 @@ const I18N = {
   en: {
     subtitleHome: 'Your gift lists',
     new_list_title: '🎉 New list',
-    new_list_hint: 'Create a list of gift ideas while visiting a store — or the And Concept Store — then share it with a link.',
+    new_list_hint_a: 'Create a list of gift ideas while visiting a store — or the',
+    new_list_hint_b: '— then share it with a link.',
     new_list_label: 'Who is this list for?',
     new_list_placeholder: 'E.g. Léa\'s birthday',
     create_list: 'Create list',
