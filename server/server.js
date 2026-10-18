@@ -227,6 +227,51 @@ const server = http.createServer(async (req, res) => {
 </head><body></body></html>`);
     }
 
+    // Manifest dynamique: icônes selon la saison (Noël 1 nov - 6 janv)
+    if (p === '/manifest.json' && req.method === 'GET') {
+      const now = new Date();
+      const m = now.getMonth();
+      const d = now.getDate();
+      const isXmas = (m >= 10) || (m === 0 && d <= 6);
+      const prefix = isXmas ? 'icon-noel' : 'icon-store';
+      const manifest = {
+        name: 'AndConcept List — Listes de cadeaux partagées',
+        short_name: 'AndConcept List',
+        description: 'Créez votre liste d\'idées cadeaux en magasin et partagez-la avec vos proches, qui filtrent par budget et réservent en secret.',
+        start_url: './index.html',
+        scope: './',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#f2cac7',
+        theme_color: '#fc5185',
+        lang: 'fr',
+        icons: [
+          { src: `${prefix}-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: `${prefix}-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: `${prefix}-maskable.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      };
+      return json(res, 200, manifest);
+    }
+
+    // og:image dynamique selon la saison (carte WhatsApp)
+    if (p === '/active-icon' && req.method === 'GET') {
+      const now = new Date();
+      const m = now.getMonth(); // 0 = janvier
+      const d = now.getDate();
+      const isXmas = (m >= 10) || (m === 0 && d <= 6);
+      res.writeHead(302, { Location: isXmas ? '/icon-noel-512.png' : '/icon-store-512.png' });
+      return res.end();
+    }
+    if (p === '/active-icon-192' && req.method === 'GET') {
+      const now = new Date();
+      const m = now.getMonth();
+      const d = now.getDate();
+      const isXmas = (m >= 10) || (m === 0 && d <= 6);
+      res.writeHead(302, { Location: isXmas ? '/icon-noel-192.png' : '/icon-store-192.png' });
+      return res.end();
+    }
+
     // Fichiers statiques (PWA)
     let file = p === '/' ? '/index.html' : p;
     const full = path.normalize(path.join(ROOT, file));

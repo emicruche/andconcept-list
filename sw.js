@@ -1,8 +1,9 @@
-const CACHE = 'andconcept-v19';
+const CACHE = 'andconcept-v20';
 const ASSETS = [
   './', './index.html', './styles.css', './app.js', './i18n.js',
-  './manifest.json', './icon.svg', './icon-maskable.svg',
-  './icon-192.png', './icon-512.png'
+  './manifest.json',
+  './icon-noel-192.png', './icon-noel-512.png', './icon-noel-maskable.png',
+  './icon-store-192.png', './icon-store-512.png', './icon-store-maskable.png'
 ];
 
 self.addEventListener('install', e => {
