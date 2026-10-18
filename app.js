@@ -78,7 +78,7 @@ async function route() {
 
 function headerHtml(sub) {
   return `<div class="header">
-    <img class="logo" src="icon.svg" alt="">
+    <img class="logo" src="active-icon-192" alt="And Concept Store">
     <div style="flex:1;min-width:0"><h1>AndConcept List</h1><div class="subtitle">${esc(sub)}</div></div>
     <select id="lang-select" title="${esc(t('lang_label'))}" aria-label="${esc(t('lang_label'))}" style="align-self:center;border:1px solid var(--violet-light);border-radius:8px;padding:2px 4px;font-size:11px;font-weight:700;background:#fff;color:var(--violet-dark);flex-shrink:0;max-width:52px;-webkit-appearance:none;appearance:none;text-align:center">
       <option value="fr" ${LANG === 'fr' ? 'selected' : ''}>FR</option>
