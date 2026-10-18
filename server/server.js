@@ -16,7 +16,9 @@ const DATABASE_URL = process.env.DATABASE_URL;
 // ---------- Couche de stockage ----------
 let pg = null;
 if (DATABASE_URL) {
-  try { pg = require('pg'); } catch { pg = null; }
+  try { pg = require('pg'); } catch (e) { console.error('Driver pg non chargé:', e.message); pg = null; }
+} else {
+  console.error('DIAGNOSTIC: DATABASE_URL absent des variables d\'environnement');
 }
 
 let store;
@@ -242,7 +244,8 @@ const server = http.createServer(async (req, res) => {
 
 store.init().then(() => {
   server.listen(PORT, () => console.log(`AndConcept List — serveur sur le port ${PORT} (stockage: ${store.kind})`));
+  if (store.kind === 'file') console.error('DIAGNOSTIC: mode fichier — vérifiez DATABASE_URL (service web > Environment) et la connexion à la base');
 }).catch(e => {
-  console.error('Échec initialisation stockage:', e);
+  console.error('Échec initialisation stockage:', e.message);
   process.exit(1);
 });
